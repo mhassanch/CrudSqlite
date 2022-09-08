@@ -1,22 +1,24 @@
 package com.example.crudsqllite;
 
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
+import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 
 public class DBHelper extends SQLiteOpenHelper {
-    public static final String USER_ID = "StudentID";
-    public static final String USER_EMAIL = "StudentName";
-    public static final String USER_PASSWORD = "StudentRollNumber";
+    public static final String USER_ID = "userID";
+    public static final String USER_EMAIL = "userEmail";
+    public static final String USER_PASSWORD = "userPassword";
 
 
 
@@ -32,6 +34,7 @@ public class DBHelper extends SQLiteOpenHelper {
         super(context, name, factory, version, errorHandler);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.P)
     public DBHelper(@Nullable Context context, @Nullable String name, int version, @NonNull SQLiteDatabase.OpenParams openParams) {
         super(context, name, version, openParams);
     }
@@ -39,56 +42,64 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         //String createTableSTatementOne = "CREATE TABLE CustTable(CustomerID Integer PRIMARY KEY AUTOINCREMENT, " + CUSTOMER_NAME_FIRST + " Text, CustomerAge Int, ActiveCustomer BOOL) ";
-        String createTableSTatement = "CREATE TABLE " + STUDENT_TABLE + "(" +
-                STUDENT_ID + " Integer PRIMARY KEY AUTOINCREMENT, " + STUDENT_NAME + " Text, "
-                + STUDENT_ROLL + " Int, " + STUDENT_ENROLL + " BOOL) ";
+        String createTableSTatement = "CREATE TABLE userTable" + "(" + USER_ID + " Integer PRIMARY KEY AUTOINCREMENT, " + USER_EMAIL + " Text, " + USER_PASSWORD + " Text" + ")";
         db.execSQL(createTableSTatement);
     }
 
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + STUDENT_TABLE);
+        db.execSQL("DROP TABLE IF EXISTS userTable");
         onCreate(db);
     }
-
-    public void  addStudent(userModel STUDENTModel){
+    public void addUser(userModel u){
         SQLiteDatabase db = this.getWritableDatabase();
-        //Hash map, as we did in bundles
         ContentValues cv = new ContentValues();
-
-        cv.put(STUDENT_NAME, STUDENTModel.getName());
-        cv.put(STUDENT_ROLL, STUDENTModel.getRollNmber());
-        cv.put(STUDENT_ENROLL, STUDENTModel.isEnroll());
-        db.insert(STUDENT_TABLE, null, cv);
-        db.close();
-        //NullCoumnHack
-        //long insert =
-        //if (insert == -1) { return false; }
-        //else{return true;}
+        cv.put(USER_EMAIL, u.getEmail());
+        cv.put(USER_PASSWORD, u.getPassword());
+        long insert = db.insert("userTable", null, cv);
+        if(insert == -1){
+            System.out.println("Error");
+        }
+        else{
+            System.out.println("Success");
+        }
     }
 
-    public ArrayList<StudentModel> getAllStudents() {
+    public ArrayList<userModel> getAllUsers() {
 
         SQLiteDatabase db = this.getReadableDatabase();
 
-        Cursor cursorCourses = db.rawQuery("SELECT * FROM " + STUDENT_TABLE, null);
+        Cursor cursorCourses = db.rawQuery("SELECT * FROM userTable" , null);
 
-        ArrayList<StudentModel> studentArrayList = new ArrayList<>();
+        ArrayList<userModel> userArrayList = new ArrayList<>();
 
         // moving our cursor to first position.
         if (cursorCourses.moveToFirst()) {
             do {
 
-                studentArrayList.add(new StudentModel(cursorCourses.getString(1),
-                        cursorCourses.getInt(2),
-                        cursorCourses.getInt(3) == 1 ? true : false));
+                userArrayList.add(new userModel(cursorCourses.getInt(0),cursorCourses.getString(1), cursorCourses.getString(2) ));
             } while (cursorCourses.moveToNext());
 
         }
 
         cursorCourses.close();
-        return studentArrayList;
+        return userArrayList;
+    }
+
+    public void deleteUser(userModel u){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete("userTable", "userId = ?", new String[]{String.valueOf(u.getId())});
+        db.close();
+    }
+
+    public void updateUser(userModel u){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(USER_EMAIL, u.getEmail());
+        cv.put(USER_PASSWORD, u.getPassword());
+        db.update("userTable", cv, "userId = ?", new String[]{String.valueOf(u.getId())});
+        db.close();
     }
 
 }
