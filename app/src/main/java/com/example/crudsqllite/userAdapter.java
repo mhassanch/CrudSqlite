@@ -1,6 +1,7 @@
 package com.example.crudsqllite;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -80,10 +81,31 @@ public class userAdapter extends ArrayAdapter {
         edit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DBHelper dbHelper = new DBHelper(Context);
-                dbHelper.updateUser(users.get(position));
+                showDialog(users.get(position));
             }
         });
         return Single;
+    }
+
+    void showDialog(userModel user){
+        Dialog dialog = new Dialog(Context);
+        dialog.setContentView(R.layout.update_dialog);
+        dialog.setTitle("Update User");
+        TextView u = dialog.findViewById(R.id.usernameU);
+        TextView p = dialog.findViewById(R.id.passwordU);
+        Button update = dialog.findViewById(R.id.update);
+        update.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!u.getText().toString().isEmpty() && !p.getText().toString().isEmpty()){
+                    user.setEmail(u.getText().toString());
+                    user.setPassword(p.getText().toString());
+                    DBHelper dbHelper = new DBHelper(Context);
+                    dbHelper.updateUser(user);
+                    dialog.dismiss();
+                }
+            }
+        });
+        dialog.show();
     }
 }
